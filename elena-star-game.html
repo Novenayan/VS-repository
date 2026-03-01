@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elena Star 先锋</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.0/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Press+Start+2P&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f0f1b;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            border: 2px solid rgba(0, 150, 255, 0.3);
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 100, 255, 0.2);
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            color: #e2e8f0;
+        }
+
+        .glass-button {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #e2e8f0;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .glass-button:hover {
+            background: rgba(56, 189, 248, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            border-radius: 8px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .title {
+            font-family: 'Press Start 2P', 'Orbitron', sans-serif;
+            color: #38bdf8;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 1.2rem;
+            z-index: 5;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .player-shield {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 1.2rem;
+            z-index: 5;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .achievement-popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            color: #e2e8f0;
+            z-index: 100;
+            transform: translateX(120%);
+            transition: transform 0.5s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .achievement-popup.show {
+            transform: translateX(0);
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        .powerup-icon {
+            width: 30px;
+            height: 30px;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        .triple-shot-icon {
+            background: linear-gradient(45deg, #38bdf8, #0ea5e9);
+        }
+
+        .shield-icon {
+            background: linear-gradient(45deg, #8b5cf6, #a78bfa);
+        }
+
+        .mobile-controls {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 5;
+        }
+
+        .mobile-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e2e8f0;
+            font-size: 24px;
+            user-select: none;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: flex;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            canvas {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container mx-auto flex flex-col items-center justify-center p-4">
+        <!-- 星空背景 -->
+        <div id="stars" class="absolute top-0 left-0 w-full h-full"></div>
+        
+        <!-- 游戏画布 -->
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <!-- 统计信息 -->
+        <div id="scoreDisplay" class="stats">得分: <span id="score">0</span></div>
+        <div id="levelDisplay" class="stats" style="top: 70px;">关卡: <span id="level">1</span></div>
+        <div id="livesDisplay" class="stats" style="top: 120px;">生命: <span id="lives">3</span></div>
+        <div id="playerShield" class="player-shield">护盾: <span id="shieldCount">0</span></div>
+        
+        <!-- 移动端控制 -->
+        <div class="mobile-controls">
+            <div class="mobile-btn" id="leftBtn"><i class="fas fa-arrow-left"></i></div>
+            <div class="mobile-btn" id="fireBtn"><i class="fas fa-bolt"></i></div>
+            <div class="mobile-btn" id="rightBtn"><i class="fas fa-arrow-right"></i></div>
+        </div>
+        
+        <!-- 开始界面 -->
+        <div id="startScreen" class="screen">
+            <h1 class="title text-4xl mb-10">ELENA STAR 先锋</h1>
+            <button id="startBtn" class="glass-button mb-6">
+                <i class="fas fa-play mr-2"></i> 开始游戏
+            </button>
+            <p class="text-gray-300 max-w-lg text-center px-4">
+                控制你的太空战机，击败敌机！使用方向键移动，空格键射击，P键暂停游戏。
+                收集道具增强火力或获得护盾保护。
+            </p>
+        </div>
+        
+        <!-- 暂停界面 -->
+        <div id="pauseScreen" class="screen hidden">
+            <h2 class="title text-3xl mb-8">游戏暂停</h2>
+            <button id="resumeBtn" class="glass-button mb-4">
+                <i class="fas fa-play mr-2"></i> 继续游戏
+            </button>
+            <button id="exitBtn" class="glass-button mt-4">
+                <i class="fas fa-sign-out-alt mr-2"></i> 退出游戏
+            </button>
+        </div>
+        
+        <!-- 游戏结束界面 -->
+        <div id="gameOverScreen" class="screen hidden">
+            <h2 class="title text-3xl mb-6">游戏结束</h2>
+            <div class="text-white text-xl mb-2">最终得分: <span id="finalScore">0</span></div>
+            <div class="text-white text-xl mb-6">到达关卡: <span id="finalLevel">0</span></div>
+            <div id="achievementsList" class="mb-8"></div>
+            <button id="restartBtn" class="glass-button">
+                <i class="fas fa-redo mr-2"></i> 重新开始
+            </button>
+        </div>
+        
+        <!-- 成就弹窗 -->
+        <div id="achievementPopup" class="achievement-popup">
+            <div class="flex items-center">
+                <i class="fas fa-trophy text-yellow-400 mr-3"></i>
+                <div>
+                    <div class="font-bold text-lg">新成就!</div>
+                    <div id="achievementName">成就名称</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <div class="hidden md:block w-64 mt-6">
+            <div class="sidebar">
+                <h3 class="text-xl font-bold mb-4 text-blue-400"><i class="fas fa-info-circle mr-2"></i> 操作指南</h3>
+                <ul class="space-y-2 mb-6">
+                    <li><i class="fas fa-arrow-up mr-2 text-blue-400"></i> 方向键：移动战机</li>
+                    <li><i class="fas fa-bolt mr-2 text-blue-400"></i> 空格：发射子弹</li>
+                    <li><i class="fas fa-pause mr-2 text-blue-400"></i> P键：暂停游戏</li>
+                </ul>
+                
+                <h3 class="text-xl font-bold mb-4 text-purple-400"><i class="fas fa-gift mr-2"></i> 道具说明</h3>
+                <ul class="space-y-3 mb-6">
+                    <li class="flex items-center">
+                        <div class="triple-shot-icon powerup-icon rounded"></div>
+                        <span>三重子弹：增强火力</span>
+                    </li>
+                    <li class="flex items-center">
+                        <div class="shield-icon powerup-icon rounded-full"></div>
+                        <span>能量护盾：防御一次攻击</span>
+                    </li>
+                </ul>
+                
+                <h3 class="text-xl font-bold mb-4 text-green-400"><i class="fas fa-trophy mr-2"></i> 成就系统</h3>
+                <ul class="space-y-2 text-sm">
+                    <li><i class="fas fa-check text-green-500 mr-2"></i> 第一滴血：首次击杀敌机</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i> 生存者：存活超过5分钟</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i> 射手：连续射击命中10次</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i> 清道夫：一屏内消灭10个敌人</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i> 完美闪避：无伤通过一波敌人</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i> 关卡征服者：达到第10关</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏主要逻辑
+        document.addEventListener('DOMContentLoaded', () => {
+            // 获取DOM元素
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const scoreDisplay = document.getElementById('score');
+            const levelDisplay = document.getElementById('level');
+            const livesDisplay = document.getElementById('lives');
+            const shieldDisplay = document.getElementById('shieldCount');
+            const startScreen = document.getElementById('startScreen');
+            const pauseScreen = document.getElementById('pauseScreen');
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            const startBtn = document.getElementById('startBtn');
+            const resumeBtn = document.getElementById('resumeBtn');
+            const exitBtn = document.getElementById('exitBtn');
+            const restartBtn = document.getElementById('restartBtn');
+            const finalScore = document.getElementById('finalScore');
+            const finalLevel = document.getElementById('finalLevel');
+            const achievementsList = document.getElementById('achievementsList');
+            const achievementPopup = document.getElementById('achievementPopup');
+            const achievementName = document.getElementById('achievementName');
+            
+            // 移动端控制按钮
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const fireBtn = document.getElementById('fireBtn');
+            
+            // 创建星空背景
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                star.style.width = `${Math.random() * 3}px`;
+                star.style.height = star.style.width;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.opacity = Math.random();
+                star.style.animation = `twinkle ${Math.random() * 5 + 3}s infinite alternate`;
+                starsContainer.appendChild(star);
+            }
+            
+            // 添加闪烁动画到样式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes twinkle {
+                    0% { opacity: 0.2; }
+                    100% { opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // 游戏状态
+            const gameState = {
+                current: 'start', // start, playing, paused, gameover
+                score: 0,
+                level: 1,
+                lives: 3,
+                playerShield: 0,
+                keys: {},
+                achievements: [],
+                lastTime: 0,
+                enemiesPassed: 0,
+                shotsHit: 0,
+                consecutiveHits: 0,
+                hitsTaken: 0,
+                survivalTime: 0
+            };
+            
+            // 玩家对象
+            const player = {
+                x: canvas.width / 2,
+                y: canvas.height - 60,
+                width: 50,
+                height: 40,
+                speed: 6,
+                color: '#38bdf8',
+                shootCooldown: 0,
+                invincible: 0,
+                flashing: false
+            };
+            
+            // 游戏对象数组
+            let bullets = [];
+            let enemies = [];
+            let enemyBullets = [];
+            let particles = [];
+            let powerups = [];
+            
+            // 敌人类型
+            const enemyTypes = [
+                { 
+                    width: 40, 
+                    height: 40, 
+                    speed: 1, 
+                    health: 1, 
+                    color: '#ef4444', 
+                    points: 10,
+                    name: '基础型'
+                },
+                { 
+                    width: 30, 
+                    height: 30, 
+                    speed: 2.5, 
+                    health: 1, 
+                    color: '#f97316', 
+                    points: 15,
+                    name: '快速型'
+                },
+                { 
+                    width: 60, 
+                    height: 60, 
+                    speed: 0.7, 
+                    health: 3, 
+                    color: '#8b5cf6', 
+                    points: 30,
+                    name: '重型'
+                }
+            ];
+            
+            // 道具类型
+            const powerupTypes = [
+                { 
+                    id: 'tripleShot', 
+                    color: '#38bdf8', 
+                    name: '三重子弹',
+                    effect: 'triple_shot'
+                },
+                { 
+                    id: 'shield', 
+                    color: '#8b5cf6', 
+                    name: '能量护盾',
+                    effect: 'shield'
+                }
+            ];
+            
+            // 成就列表
+            const achievements = [
+                { id: 'first_blood', name: '第一滴血', description: '首次击杀敌机', unlocked: false },
+                { id: 'survivor', name: '生存者', description: '存活超过5分钟', unlocked: false },
+                { id: 'sharpshooter', name: '神射手', description: '连续命中10次', unlocked: false },
+                { id: 'cleaner', name: '清道夫', description: '一屏内消灭10个敌人', unlocked: false },
+                { id: 'dodger', name: '闪避者', description: '无伤通过一波敌人', unlocked: false },
+                { id: 'conqueror', name: '征服者', description: '达到第10关', unlocked: false }
+            ];
+            
+            // 初始化事件监听器
+            initEventListeners();
+            
+            // 初始化游戏
+            function initGame() {
+                gameState.score = 0;
+                gameState.level = 1;
+                gameState.lives = 3;
+                gameState.playerShield = 0;
+                gameState.enemiesPassed = 0;
+                gameState.shotsHit = 0;
+                gameState.consecutiveHits = 0;
+                gameState.hitsTaken = 0;
+                gameState.survivalTime = 0;
+                gameState.achievements = [];
+                
+                player.x = canvas.width / 2;
+                player.y = canvas.height - 60;
+                player.shootCooldown = 0;
+                player.invincible = 0;
+                player.flashing = false;
+                
+                bullets = [];
+                enemies = [];
+                enemyBullets = [];
+                particles = [];
+                powerups = [];
+                
+                updateUI();
+            }
+            
+            // 初始化事件监听器
+            function initEventListeners() {
+                // 键盘事件
+                window.addEventListener('keydown', (e) => {
+                    gameState.keys[e.key] = true;
+                    
+                    if (e.key === 'p' || e.key === 'P') {
+                        if (gameState.current === 'playing') {
+                            pauseGame();
+                        } else if (gameState.current === 'paused') {
+                            resumeGame();
+                        }
+                    }
+                    
+                    if (e.key === ' ') {
+                        e.preventDefault();
+                        if (gameState.current === 'playing') {
+                            shootBullet();
+                        }
+                    }
+                });
+                
+                window.addEventListener('keyup', (e) => {
+                    gameState.keys[e.key] = false;
+                });
+                
+                // 按钮事件
+                startBtn.addEventListener('click', startGame);
+                resumeBtn.addEventListener('click', resumeGame);
+                exitBtn.addEventListener('click', () => {
+                    pauseScreen.classList.add('hidden');
+                    startScreen.classList.remove('hidden');
+                    gameState.current = 'start';
+                });
+                restartBtn.addEventListener('click', startGame);
+                
+                // 移动端控制
+                leftBtn.addEventListener('touchstart', () => gameState.keys['ArrowLeft'] = true);
+                leftBtn.addEventListener('touchend', () => gameState.keys['ArrowLeft'] = false);
+                
+                rightBtn.addEventListener('touchstart', () => gameState.keys['ArrowRight'] = true);
+                rightBtn.addEventListener('touchend', () => gameState.keys['ArrowRight'] = false);
+                
+                fireBtn.addEventListener('touchstart', () => {
+                    if (gameState.current === 'playing') {
+                        shootBullet();
+                    }
+                });
+            }
+            
+            // 开始游戏
+            function startGame() {
+                initGame();
+                startScreen.classList.add('hidden');
+                gameOverScreen.classList.add('hidden');
+                gameState.current = 'playing';
+                requestAnimationFrame(gameLoop);
+            }
+            
+            // 暂停游戏
+            function pauseGame() {
+                gameState.current = 'paused';
+                pauseScreen.classList.remove('hidden');
+            }
+            
+            // 恢复游戏
+            function resumeGame() {
+                gameState.current = 'playing';
+                pauseScreen.classList.add('hidden');
+            }
+            
+            // 游戏结束
+            function gameOver() {
+                gameState.current = 'gameover';
+                finalScore.textContent = gameState.score;
+                finalLevel.textContent = gameState.level;
+                
+                // 更新成就列表
+                achievementsList.innerHTML = '';
+                gameState.achievements.forEach(achId => {
+                    const ach = achievements.find(a => a.id === achId);
+                    if (ach) {
+                        const achEl = document.createElement('div');
+                        achEl.className = 'flex items-center bg-gray-700 p-2 rounded mb-2';
+                        achEl.innerHTML = `<i class="fas fa-trophy text-yellow-400 mr-2"></i>${ach.name} - ${ach.description}`;
+                        achievementsList.appendChild(achEl);
+                    }
+                });
+                
+                gameOverScreen.classList.remove('hidden');
+            }
+            
+            // 更新UI
+            function updateUI() {
+                scoreDisplay.textContent = gameState.score;
+                levelDisplay.textContent = gameState.level;
+                livesDisplay.textContent = gameState.lives;
+                shieldDisplay.textContent = gameState.playerShield;
+            }
+            
+            // 发射子弹
+            function shootBullet() {
+                if (player.shootCooldown <= 0) {
+                    // 标准子弹
+                    bullets.push({
+                        x: player.x,
+                        y: player.y - 20,
+                        width: 5,
+                        height: 15,
+                        speed: 10,
+                        color: '#60a5fa'
+                    });
+                    
+                    // 如果有三重子弹道具，添加额外子弹
+                    if (gameState.playerShield > 0) { // 重用变量作为三重子弹标记
+                        bullets.push({
+                            x: player.x - 15,
+                            y: player.y - 15,
+                            width: 5,
+                            height: 15,
+                            speed: 10,
+                            color: '#60a5fa'
+                        });
+                        
+                        bullets.push({
+                            x: player.x + 15,
+                            y: player.y - 15,
+                            width: 5,
+                            height: 15,
+                            speed: 10,
+                            color: '#60a5fa'
+                        });
+                    }
+                    
+                    player.shootCooldown = 15;
+                }
+            }
+            
+            // 生成敌人
+            function spawnEnemy() {
+                // 随机选择敌人类型，高级别增加更强敌人概率
+                let typeIndex;
+                if (gameState.level < 3) {
+                    typeIndex = 0;
+                } else if (gameState.level < 6) {
+                    typeIndex = Math.random() < 0.7 ? 0 : 1;
+                } else if (gameState.level < 10) {
+                    typeIndex = Math.random() < 0.5 ? 0 : Math.random() < 0.7 ? 1 : 2;
+                } else {
+                    typeIndex = Math.random() < 0.3 ? 0 : Math.random() < 0.6 ? 1 : 2;
+                }
+                
+                const enemyType = enemyTypes[typeIndex];
+                
+                enemies.push({
+                    x: Math.random() * (canvas.width - enemyType.width),
+                    y: -enemyType.height,
+                    width: enemyType.width,
+                    height: enemyType.height,
+                    speed: enemyType.speed + (gameState.level - 1) * 0.1,
+                    health: enemyType.health,
+                    color: enemyType.color,
+                    type: enemyType.name,
+                    lastShot: 0
+                });
+            }
+            
+            // 生成道具
+            function spawnPowerup(x, y) {
+                if (Math.random() < 0.3) { // 30% 概率掉落道具
+                    const type = Math.floor(Math.random() * powerupTypes.length);
+                    powerups.push({
+                        x: x,
+                        y: y,
+                        width: 25,
+                        height: 25,
+                        speed: 2,
+                        color: powerupTypes[type].color,
+                        effect: powerupTypes[type].effect,
+                        name: powerupTypes[type].name
+                    });
+                }
+            }
+            
+            // 创建粒子效果
+            function createParticles(x, y, color, count = 10) {
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: x,
+                        y: y,
+                        size: Math.random() * 3 + 1,
+                        speedX: Math.random() * 6 - 3,
+                        speedY: Math.random() * 6 - 3,
+                        color: color,
+                        life: 30
+                    });
+                }
+            }
+            
+            // 检查成就
+            function checkAchievements() {
+                // 第一滴血
+                if (!hasAchievement('first_blood') && gameState.score >= 10) {
+                    unlockAchievement('first_blood');
+                }
+                
+                // 神射手
+                if (!hasAchievement('sharpshooter') && gameState.consecutiveHits >= 10) {
+                    unlockAchievement('sharpshooter');
+                }
+                
+                // 征服者
+                if (!hasAchievement('conqueror') && gameState.level >= 10) {
+                    unlockAchievement('conqueror');
+                }
+            }
+            
+            // 检查是否已有成就
+            function hasAchievement(id) {
+                return gameState.achievements.includes(id);
+            }
+            
+            // 解锁成就
+            function unlockAchievement(id) {
+                if (!hasAchievement(id)) {
+                    const ach = achievements.find(a => a.id === id);
+                    if (ach) {
+                        ach.unlocked = true;
+                        gameState.achievements.push(id);
+                        
+                        // 显示成就弹窗
+                        achievementName.textContent = ach.name;
+                        achievementPopup.classList.add('show');
+                        
+                        setTimeout(() => {
+                            achievementPopup.classList.remove('show');
+                        }, 3000);
+                    }
+                }
+            }
+            
+            // 游戏主循环
+            function gameLoop(timestamp) {
+                if (gameState.current !== 'playing') return;
+                
+                // 计算时间差
+                const deltaTime = timestamp - gameState.lastTime;
+                gameState.lastTime = timestamp;
+                
+                // 清除画布
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 更新游戏状态
+                updatePlayer();
+                updateBullets();
+                updateEnemies(deltaTime);
+                updateEnemyBullets();
+                updateParticles();
+                updatePowerups();
+                
+                // 生成敌人
+                if (Math.random() < 0.03 + gameState.level * 0.005) {
+                    spawnEnemy();
+                }
+                
+                // 检查升级
+                if (gameState.score >= gameState.level * 100) {
+                    gameState.level++;
+                    // 清除当前屏幕上的敌人
+                    enemies = enemies.filter(enemy => enemy.y > player.y);
+                    updateUI();
+                }
+                
+                // 检查成就
+                checkAchievements();
+                
+                // 更新生存时间（每秒检查一次）
+                gameState.survivalTime += deltaTime / 1000;
+                if (Math.floor(gameState.survivalTime) % 30 === 0 && !hasAchievement('survivor')) {
+                    unlockAchievement('survivor');
+                }
+                
+                // 绘制游戏对象
+                drawPlayer();
+                drawBullets();
+                drawEnemies();
+                drawEnemyBullets();
+                drawParticles();
+                drawPowerups();
+                
+                // 继续循环
+                requestAnimationFrame(gameLoop);
+            }
+            
+            // 更新玩家
+            function updatePlayer() {
+                // 移动
+                if (gameState.keys['ArrowLeft'] && player.x > player.width / 2) {
+                    player.x -= player.speed;
+                }
+                if (gameState.keys['ArrowRight'] && player.x < canvas.width - player.width / 2) {
+                    player.x += player.speed;
+                }
+                
+                // 冷却时间递减
+                if (player.shootCooldown > 0) {
+                    player.shootCooldown--;
+                }
+                
+                // 无敌时间递减
+                if (player.invincible > 0) {
+                    player.invincible--;
+                    player.flashing = Math.floor(player.invincible / 5) % 2 === 0;
+                } else {
+                    player.flashing = false;
+                }
+            }
+            
+            // 更新子弹
+            function updateBullets() {
+                for (let i = bullets.length - 1; i >= 0; i--) {
+                    bullets[i].y -= bullets[i].speed;
+                    
+                    // 移除超出屏幕的子弹
+                    if (bullets[i].y < 0) {
+                        bullets.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // 检测子弹与敌人的碰撞
+                    for (let j = enemies.length - 1; j >= 0; j--) {
+                        if (checkCollision(bullets[i], enemies[j])) {
+                            // 减少敌人血量
+                            enemies[j].health--;
+                            
+                            // 如果敌人死亡
+                            if (enemies[j].health <= 0) {
+                                // 增加分数
+                                const enemyType = enemyTypes.find(t => t.name === enemies[j].type);
+                                gameState.score += enemyType.points;
+                                
+                                // 创建爆炸效果
+                                createParticles(enemies[j].x + enemies[j].width/2, enemies[j].y + enemies[j].height/2, enemies[j].color, 15);
+                                
+                                // 生成道具
+                                spawnPowerup(enemies[j].x + enemies[j].width/2, enemies[j].y + enemies[j].height/2);
+                                
+                                // 移除敌人
+                                enemies.splice(j, 1);
+                                
+                                // 增加连击数
+                                gameState.consecutiveHits++;
+                                
+                                // 检查成就
+                                if (!hasAchievement('first_blood') && gameState.score >= 10) {
+                                    unlockAchievement('first_blood');
+                                }
+                            } else {
+                                // 否则只移除子弹
+                                bullets.splice(i, 1);
+                            }
+                            
+                            // 增加命中统计
+                            gameState.shotsHit++;
+                            
+                            // 更新UI
+                            updateUI();
+                            
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // 更新敌人
+            function updateEnemies(deltaTime) {
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    enemies[i].y += enemies[i].speed;
+                    
+                    // 敌人射击逻辑
+                    enemies[i].lastShot += deltaTime / 1000;
+                    if (enemies[i].lastShot > 2) { // 每2秒射击一次
+                        // 发射敌方子弹
+                        enemyBullets.push({
+                            x: enemies[i].x + enemies[i].width / 2,
+                            y: enemies[i].y + enemies[i].height,
+                            width: 5,
+                            height: 10,
+                            speed: 4,
+                            color: '#f87171'
+                        });
+                        
+                        enemies[i].lastShot = 0;
+                    }
+                    
+                    // 移除超出屏幕的敌人
+                    if (enemies[i].y > canvas.height) {
+                        enemies.splice(i, 1);
+                        gameState.enemiesPassed++;
+                        
+                        // 如果敌人逃脱，减少生命值
+                        if (!player.invincible) {
+                            loseLife();
+                        }
+                        
+                        continue;
+                    }
+                }
+            }
+            
+            // 更新敌方子弹
+            function updateEnemyBullets() {
+                for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                    enemyBullets[i].y += enemyBullets[i].speed;
+                    
+                    // 移除超出屏幕的子弹
+                    if (enemyBullets[i].y > canvas.height) {
+                        enemyBullets.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // 检测敌方子弹与玩家的碰撞
+                    if (!player.invincible && checkCollision(enemyBullets[i], player)) {
+                        enemyBullets.splice(i, 1);
+                        loseLife();
+                    }
+                }
+            }
+            
+            // 更新粒子
+            function updateParticles() {
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].x += particles[i].speedX;
+                    particles[i].y += particles[i].speedY;
+                    particles[i].life--;
+                    
+                    if (particles[i].life <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+            }
+            
+            // 更新道具
+            function updatePowerups() {
+                for (let i = powerups.length - 1; i >= 0; i--) {
+                    powerups[i].y += powerups[i].speed;
+                    
+                    // 移除超出屏幕的道具
+                    if (powerups[i].y > canvas.height) {
+                        powerups.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // 检测玩家与道具的碰撞
+                    if (checkCollision(powerups[i], player)) {
+                        // 应用道具效果
+                        if (powerups[i].effect === 'shield') {
+                            gameState.playerShield++;
+                        } else if (powerups[i].effect === 'triple_shot') {
+                            gameState.playerShield++; // 临时重用该变量
+                        }
+                        
+                        // 创建收集效果
+                        createParticles(
+                            powerups[i].x + powerups[i].width/2,
+                            powerups[i].y + powerups[i].height/2,
+                            powerups[i].color,
+                            20
+                        );
+                        
+                        // 移除道具
+                        powerups.splice(i, 1);
+                        
+                        // 更新UI
+                        updateUI();
+                    }
+                }
+            }
+            
+            // 玩家失去生命
+            function loseLife() {
+                if (gameState.playerShield > 0) {
+                    // 使用护盾
+                    gameState.playerShield--;
+                    updateUI();
+                } else {
+                    gameState.lives--;
+                    updateUI();
+                    
+                    if (gameState.lives <= 0) {
+                        gameOver();
+                    } else {
+                        // 给玩家短暂无敌时间
+                        player.invincible = 120; // 2秒无敌时间（假设60fps）
+                    }
+                }
+                
+                gameState.hitsTaken++;
+                gameState.consecutiveHits = 0; // 重置连击数
+            }
+            
+            // 检测碰撞
+            function checkCollision(obj1, obj2) {
+                return obj1.x < obj2.x + obj2.width &&
+                       obj1.x + obj1.width > obj2.x &&
+                       obj1.y < obj2.y + obj2.height &&
+                       obj1.y + obj1.height > obj2.y;
+            }
+            
+            // 绘制玩家
+            function drawPlayer() {
+                if (player.flashing && Math.floor(Date.now() / 100) % 2 === 0) {
+                    // 闪烁效果期间跳过绘制
+                    return;
+                }
+                
+                // 绘制战机主体
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.moveTo(player.x, player.y - player.height/2);
+                ctx.lineTo(player.x - player.width/2, player.y + player.height/2);
+                ctx.lineTo(player.x + player.width/2, player.y + player.height/2);
+                ctx.closePath();
+                ctx.fill();
+                
+                // 绘制驾驶舱
+                ctx.fillStyle = '#93c5fd';
+                ctx.beginPath();
+                ctx.arc(player.x, player.y - 5, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 绘制发光效果
+                ctx.shadowColor = player.color;
+                ctx.shadowBlur = 15;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                // 如果有无敌效果，绘制特殊效果
+                if (player.invincible > 0) {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+            
+            // 绘制子弹
+            function drawBullets() {
+                bullets.forEach(bullet => {
+                    ctx.fillStyle = bullet.color;
+                    ctx.shadowColor = bullet.color;
+                    ctx.shadowBlur = 10;
+                    ctx.fillRect(bullet.x - bullet.width/2, bullet.y, bullet.width, bullet.height);
+                    ctx.shadowBlur = 0;
+                });
+            }
+            
+            // 绘制敌人
+            function drawEnemies() {
+                enemies.forEach(enemy => {
+                    ctx.fillStyle = enemy.color;
+                    ctx.beginPath();
+                    ctx.moveTo(enemy.x + enemy.width/2, enemy.y);
+                    ctx.lineTo(enemy.x, enemy.y + enemy.height);
+                    ctx.lineTo(enemy.x + enemy.width, enemy.y + enemy.height);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // 绘制发光效果
+                    ctx.shadowColor = enemy.color;
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    
+                    // 血量条
+                    if (enemy.health > 1) {
+                        const barWidth = enemy.width;
+                        const barHeight = 4;
+                        const barX = enemy.x;
+                        const barY = enemy.y - 10;
+                        
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                        ctx.fillRect(barX, barY, barWidth, barHeight);
+                        
+                        ctx.fillStyle = '#22c55e';
+                        const healthWidth = (enemy.health / enemyTypes.find(t => t.name === enemy.type).health) * barWidth;
+                        ctx.fillRect(barX, barY, healthWidth, barHeight);
+                    }
+                });
+            }
+            
+            // 绘制敌方子弹
+            function drawEnemyBullets() {
+                enemyBullets.forEach(bullet => {
+                    ctx.fillStyle = bullet.color;
+                    ctx.shadowColor = bullet.color;
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(bullet.x, bullet.y, bullet.width, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                });
+            }
+            
+            // 绘制粒子
+            function drawParticles() {
+                particles.forEach(particle => {
+                    ctx.fillStyle = particle.color;
+                    ctx.globalAlpha = particle.life / 30;
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                });
+            }
+            
+            // 绘制道具
+            function drawPowerups() {
+                powerups.forEach(powerup => {
+                    ctx.fillStyle = powerup.color;
+                    ctx.beginPath();
+                    ctx.arc(powerup.x + powerup.width/2, powerup.y + powerup.height/2, powerup.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 绘制发光效果
+                    ctx.shadowColor = powerup.color;
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    
+                    // 绘制内部符号
+                    ctx.fillStyle = 'white';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    if (powerup.effect === 'triple_shot') {
+                        ctx.fillText('T', powerup.x + powerup.width/2, powerup.y + powerup.height/2);
+                    } else if (powerup.effect === 'shield') {
+                        ctx.fillText('S', powerup.x + powerup.width/2, powerup.y + powerup.height/2);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
